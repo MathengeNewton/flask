@@ -1,40 +1,38 @@
-from flask import Flask, render_template
+from flask import Flask, render_template, redirect, url_for
 from flask_bootstrap import Bootstrap
 from flask_wtf import FlaskForm
 from wtforms import StringField, PasswordField, BooleanField
 from wtforms.validators import InputRequired, Email, length
-# from flask_sqlalchemy import SQLAlchemy
-
-# from datetime import datetime
+from flask_sqlalchemy import SQLAlchemy
+from werkzeug.security import generate_password_hash, check_password_hash
+from flask_login import LoginManager, UserMixin, login_user, login_required, logout_user, current_user
 
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = "secretkey"
+app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql+psycopg2://postgres:mathenge,./1998@localhost/myflaskapp'
 Bootstrap(app)
-# app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql + psycopg2://postgres:mathenge,./1998@localhost/mytest'
-# db = SQLAlchemy(app)
+db = SQLAlchemy(app)
+login_manager = LoginManager()
+login_manager.init_app(app)
+login_manager.login_view = 'login'
 
 
-# class firstTable(db.Model):
-#     id = db.Column(db.Integer, nullable=False, primary_key=True)
-#     title = db.Column(db.String(100), nullable=False, unique=True)
-#     content = db.Column(db.Text, nullable=False)
-#     authur = db.Column(db.String(20), nullable=False, default='n/a')
-#     date = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
+class userinfo(UserMixin, db.Model):
+    id = db.Column(db.Integer, nullable=False, primary_key=True)
+    name = db.Column(db.String(15), nullable=False)
+    email = db.Column(db.String(20), nullable=False, unique=True)
+    password = db.Column(db.String(80), nullable=False)
 
-#     def __init__(self, title, content, authur, date):
-#         self.title = title
-#         self.content = content
-#         self.authur = authur
-#         self.date = date
 
-#     def __repr__(self):
-#         return 'Blog Post' + str(self.id)
+@login_manager.user_loader
+def load_user(user_id):
+    return userinfo.query.get(int(user_id))
 
 
 class LoginForm(FlaskForm):
     email = StringField('email', validators=[
-                        InputRequired(), length(min=4, max=15)])
+                        InputRequired(), length(min=10, max=20)])
     password = PasswordField('password', validators=[
                              InputRequired(), length(min=8, max=80)])
     remember = BooleanField('remember me')
@@ -44,7 +42,7 @@ class Registration(FlaskForm):
     name = StringField('name', validators=[
                        InputRequired(), length(min=6, max=20)])
     email = StringField('email', validators=[
-                        InputRequired(), length(min=4, max=15)])
+                        InputRequired(), length(min=10, max=20)])
     password = PasswordField('password', validators=[
                              InputRequired(), length(min=8, max=80)])
 
@@ -59,20 +57,33 @@ def index():
 def login():
     form = LoginForm()
     if form.validate_on_submit():
-        return '<h1>' + form.email.data + '' + form.password.data + '</h1>'
+        account = userinfo.query.filter_by(email=form.email.data).first()
+        if account:
+            if check_password_hash(account.password, form.password.data):
+                return redirect(url_for('dashboard'))
+        return '<h1>Invalid user or password</h1>'
     return render_template('entry/login.html', form=form)
 
 
 @app.route('/register', methods=['GET', 'POST'])
 def register():
     form = Registration()
+
     if form.validate_on_submit():
-        return '<h1>' + form.name.data + ' ' + form.email.data + ' ' + form.password.data + '</h1>'
+        hashed_password = generate_password_hash(
+            form.password.data, method='sha256')
+        new_user = userinfo(name=form.name.data,
+                            email=form.email.data, password=hashed_password)
+        db.session.add(new_user)
+        db.session.commit()
+        return render_template('entry/login.html')
+
     return render_template('entry/register.html', form=form)
 
 
 @app.route('/dashboard')
 def dashboard():
+
     return render_template('body/dashboard.html')
 
 
