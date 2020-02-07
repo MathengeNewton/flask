@@ -1,0 +1,26 @@
+* {
+    font-style: normal;
+    font-family: Arial, Helvetica, sans-serif;
+    color: black;
+    list-style: none;
+}
+
+/* 
+.banner {
+    display: flex;
+    height: 30%;
+
+}
+
+.banner .image-icon {
+    margin-left: 5%;
+}
+
+.banner .lists {
+    float: right;
+    padding-left: 10px;
+} */
+
+.banner .access {
+    display: flex;
+}
