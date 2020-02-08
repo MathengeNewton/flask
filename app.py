@@ -30,7 +30,17 @@ def load_user(user_id):
     return userinfo.query.get(int(user_id))
 
 
+# class jsonLogin():
+    # mydata = {
+    #     'name': 'administrator',
+    #     'email': 'admin@mail.com',
+    #     'password': 'password'
+    # }
+    # email = mydata['email']
+    # password = mydata['password']
+
 class LoginForm(FlaskForm):
+
     email = StringField('email', validators=[
                         InputRequired(), length(min=10, max=20)])
     password = PasswordField('password', validators=[
@@ -62,6 +72,7 @@ def login():
             if check_password_hash(account.password, form.password.data):
                 return redirect(url_for('dashboard'))
         return '<h1>Invalid user or password</h1>'
+
     return render_template('entry/login.html', form=form)
 
 

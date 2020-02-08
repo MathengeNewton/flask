@@ -1,0 +1,14 @@
+* {
+    font-style: normal;
+    font-family: Arial, Helvetica, sans-serif;
+    color: black;
+}
+
+.navbar-container {
+    background-color: burlywood;
+    display: flex;
+    height: 30%;
+    width: 90%;
+    align-items: center;
+
+}
