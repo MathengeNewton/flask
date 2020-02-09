@@ -57,6 +57,14 @@ class Registration(FlaskForm):
                              InputRequired(), length(min=8, max=80)])
 
 
+class reset(FlaskForm):
+    email = StringField('email', validators=[
+                        InputRequired(), length(min=10, max=20)])
+    password = PasswordField('password', validators=[
+        InputRequired(), length(min=8, max=80)])
+    remember = BooleanField('remember me')
+
+
 @app.route('/')
 def index():
 
@@ -91,7 +99,22 @@ def register():
 
     return render_template('entry/register.html', form=form)
 
+# reset password
+@app.route('/reset', methods=['POST', 'GET'])
+def reset_password():
+    form = reset()
+    account = userinfo.query.filter_by(email=form.email.data).first()
+    if form.validate_on_submit():
+        hashed_password = generate_password_hash(
+            form.password.data, method='sha256')
+        account.password = hashed_password
+        db.session.commit()
 
+        return "<h1>password changed</h1>"
+
+    return render_template('entry/reset.html', form=form)
+
+# actual dashboard
 @app.route('/dashboard')
 def dashboard():
 
